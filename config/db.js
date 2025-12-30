@@ -1,12 +1,20 @@
-import dotenv from "dotenv";
-dotenv.config(); // ✅ FORCE env to load here
-
 import mysql from "mysql2";
 import { URL } from "url";
 
+/*
+  Choose DB URL based on environment
+  - Local development → MYSQL_PUBLIC_URL
+  - Railway production → MYSQL_URL
+*/
+const connectionUrl =
+  process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL;
 
-// Parse Railway PUBLIC MySQL URL safely
-const dbUrl = new URL(process.env.MYSQL_PUBLIC_URL);
+if (!connectionUrl) {
+  throw new Error("No MySQL connection URL found in environment variables");
+}
+
+// Parse the URL safely
+const dbUrl = new URL(connectionUrl);
 
 const db = mysql.createConnection({
   host: dbUrl.hostname,
@@ -23,11 +31,10 @@ db.connect((err) => {
   if (err) {
     console.error("Database connection error:", err);
   } else {
-    console.log("MySQL connected successfully (Railway PUBLIC)");
+    console.log("MySQL connected successfully");
   }
 });
 
 export default db;
-
 
 
