@@ -1,18 +1,27 @@
 import multer from "multer";
 import multerS3 from "multer-s3";
-import s3 from "../config/s3.js";
+import AWS from "aws-sdk";
+import path from "path";
 
-/*
-  Multer configuration to upload images directly to Railway S3 Bucket
-*/
+// Configure S3 (Railway Bucket)
+const s3 = new AWS.S3({
+  endpoint: process.env.S3_ENDPOINT,
+  accessKeyId: process.env.S3_KEY,
+  secretAccessKey: process.env.S3_SECRET,
+  region: process.env.S3_REGION,
+  signatureVersion: "v4",
+});
+
+// Multer S3 storage
 const upload = multer({
   storage: multerS3({
-    s3,
+    s3: s3,
     bucket: process.env.S3_BUCKET,
-    acl: "public-read", // makes the image publicly accessible
+    acl: "public-read",
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: (req, file, cb) => {
-      const fileName = `menu/${Date.now()}-${file.originalname}`;
+      const fileName =
+        Date.now().toString() + path.extname(file.originalname);
       cb(null, fileName);
     },
   }),

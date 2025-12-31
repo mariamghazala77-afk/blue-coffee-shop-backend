@@ -27,7 +27,8 @@ router.get("/admin/all", (req, res) => {
 });
 
 /* ===============================
-   ADD MENU ITEM (S3 IMAGE)
+   ADD MENU ITEM
+   - Image uploaded to Railway Bucket
 ================================ */
 router.post("/", upload.single("image"), (req, res) => {
   const { name, price, category } = req.body;
@@ -36,7 +37,7 @@ router.post("/", upload.single("image"), (req, res) => {
     return res.status(400).json({ message: "Missing fields" });
   }
 
-  // ✅ URL coming directly from Railway Bucket
+  // ✅ URL from Railway Bucket
   const imageUrl = req.file.location;
 
   const sql = `
@@ -46,12 +47,12 @@ router.post("/", upload.single("image"), (req, res) => {
 
   db.query(sql, [name, price, category, imageUrl], (err) => {
     if (err) return res.status(500).json(err);
-    res.json({ message: "Menu item added successfully" });
+    res.json({ message: "Menu item added" });
   });
 });
 
 /* ===============================
-   UPDATE MENU ITEM (OPTIONAL IMAGE)
+   UPDATE MENU ITEM
 ================================ */
 router.put("/:id", upload.single("image"), (req, res) => {
   const { id } = req.params;
@@ -59,7 +60,7 @@ router.put("/:id", upload.single("image"), (req, res) => {
 
   let sql = `
     UPDATE menu
-    SET name=?, price=?, category=?, is_available=?
+    SET name = ?, price = ?, category = ?, is_available = ?
   `;
 
   const values = [
@@ -69,18 +70,18 @@ router.put("/:id", upload.single("image"), (req, res) => {
     is_available ?? 1,
   ];
 
-  // ✅ If a new image is uploaded → replace URL
+  // ✅ If new image uploaded → replace URL
   if (req.file) {
-    sql += ", image_url=?";
+    sql += ", image_url = ?";
     values.push(req.file.location);
   }
 
-  sql += " WHERE id=?";
+  sql += " WHERE id = ?";
   values.push(id);
 
   db.query(sql, values, (err) => {
     if (err) return res.status(500).json(err);
-    res.json({ message: "Menu item updated successfully" });
+    res.json({ message: "Menu item updated" });
   });
 });
 
