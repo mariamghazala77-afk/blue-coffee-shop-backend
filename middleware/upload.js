@@ -1,43 +1,32 @@
 import multer from "multer";
-import path from "path";
+import multerS3 from "multer-s3";
+import s3 from "../config/s3.js";
 
 /*
-  Configure how and where files are stored
-*/
-const storage = multer.diskStorage({
-  // Folder where images will be saved
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-
-  // Create a unique file name
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + path.extname(file.originalname);
-    cb(null, uniqueName);
-  },
-});
-
-/*
-  Allow only image files
-*/
-const fileFilter = (req, file, cb) => {
-  if (
-    file.mimetype === "image/jpeg" ||
-    file.mimetype === "image/png" ||
-    file.mimetype === "image/jpg"
-  ) {
-    cb(null, true); // Accept file
-  } else {
-    cb(new Error("Only image files are allowed"), false);
-  }
-};
-
-/*
-  Create multer instance
+  Multer configuration to upload images directly to Railway S3 Bucket
 */
 const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
+  storage: multerS3({
+    s3,
+    bucket: process.env.S3_BUCKET,
+    acl: "public-read", // makes the image publicly accessible
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: (req, file, cb) => {
+      const fileName = `menu/${Date.now()}-${file.originalname}`;
+      cb(null, fileName);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (
+      file.mimetype === "image/jpeg" ||
+      file.mimetype === "image/png" ||
+      file.mimetype === "image/jpg"
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"), false);
+    }
+  },
 });
 
 export default upload;

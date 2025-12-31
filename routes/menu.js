@@ -27,7 +27,7 @@ router.get("/admin/all", (req, res) => {
 });
 
 /* ===============================
-   ADD MENU ITEM
+   ADD MENU ITEM (S3 IMAGE)
 ================================ */
 router.post("/", upload.single("image"), (req, res) => {
   const { name, price, category } = req.body;
@@ -36,7 +36,8 @@ router.post("/", upload.single("image"), (req, res) => {
     return res.status(400).json({ message: "Missing fields" });
   }
 
-  const imageUrl = `/uploads/${req.file.filename}`;
+  // ✅ URL coming directly from Railway Bucket
+  const imageUrl = req.file.location;
 
   const sql = `
     INSERT INTO menu (name, price, category, image_url, is_available)
@@ -45,12 +46,12 @@ router.post("/", upload.single("image"), (req, res) => {
 
   db.query(sql, [name, price, category, imageUrl], (err) => {
     if (err) return res.status(500).json(err);
-    res.json({ message: "Menu item added" });
+    res.json({ message: "Menu item added successfully" });
   });
 });
 
 /* ===============================
-   UPDATE MENU ITEM
+   UPDATE MENU ITEM (OPTIONAL IMAGE)
 ================================ */
 router.put("/:id", upload.single("image"), (req, res) => {
   const { id } = req.params;
@@ -58,7 +59,7 @@ router.put("/:id", upload.single("image"), (req, res) => {
 
   let sql = `
     UPDATE menu
-    SET name = ?, price = ?, category = ?, is_available = ?
+    SET name=?, price=?, category=?, is_available=?
   `;
 
   const values = [
@@ -68,17 +69,18 @@ router.put("/:id", upload.single("image"), (req, res) => {
     is_available ?? 1,
   ];
 
+  // ✅ If a new image is uploaded → replace URL
   if (req.file) {
-    sql += ", image_url = ?";
-    values.push(`/uploads/${req.file.filename}`);
+    sql += ", image_url=?";
+    values.push(req.file.location);
   }
 
-  sql += " WHERE id = ?";
+  sql += " WHERE id=?";
   values.push(id);
 
   db.query(sql, values, (err) => {
     if (err) return res.status(500).json(err);
-    res.json({ message: "Menu item updated" });
+    res.json({ message: "Menu item updated successfully" });
   });
 });
 
@@ -94,4 +96,3 @@ router.delete("/:id", (req, res) => {
 });
 
 export default router;
-
