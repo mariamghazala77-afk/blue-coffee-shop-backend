@@ -3,6 +3,8 @@ import multerS3 from "multer-s3";
 import AWS from "aws-sdk";
 import path from "path";
 
+console.log("DEBUG S3_BUCKET =", process.env.S3_BUCKET);
+
 // Configure S3 (Railway Bucket)
 const s3 = new AWS.S3({
   endpoint: process.env.S3_ENDPOINT,
