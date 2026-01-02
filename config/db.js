@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// ✅ Railway MySQL connection using separate env vars (stable)
 const db = mysql.createConnection({
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
@@ -15,7 +14,7 @@ const db = mysql.createConnection({
 
 db.connect((err) => {
   if (err) {
-    console.error("❌ MySQL connection error:", err.message);
+    console.error("❌ MySQL connection error:", err);
   } else {
     console.log("✅ MySQL connected");
   }
