@@ -1,19 +1,19 @@
+import dotenv from "dotenv";
+dotenv.config({ path: ".env" }); // ✅ يجب أن يكون أول شيء
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 
 import menuRoutes from "./routes/menu.js";
 import ordersRoutes from "./routes/orders.js";
 import adminAuthRoutes from "./routes/adminAuth.js";
-
-dotenv.config();
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Static folder for LOCAL uploads
+// ❌ لا نستخدم uploads محلي في production (لكن وجوده لا يكسر)
 app.use("/uploads", express.static("uploads"));
 
 // Routes
