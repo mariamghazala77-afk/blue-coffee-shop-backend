@@ -1,8 +1,16 @@
 import multer from "multer";
 
-// Simple in-memory upload (NO S3, NO disk, NO bucket)
-const upload = multer({
-  storage: multer.memoryStorage(),
+// Save files on disk (uploads folder)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads");
+  },
+  filename: (req, file, cb) => {
+    // filename = date + original name
+    cb(null, Date.now() + "-" + file.originalname);
+  },
 });
+
+const upload = multer({ storage });
 
 export default upload;

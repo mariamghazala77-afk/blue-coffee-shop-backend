@@ -4,74 +4,127 @@ import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
-/* GET MENU (CLIENT) */
-router.get("/", (req, res) => {
-  const sql = "SELECT * FROM menu WHERE is_available = 1";
-  db.query(sql, (err, rows) => {
-    if (err) return res.status(500).json(err);
+/* =====================================================
+   GET MENU ITEMS (CLIENT SIDE)
+   - Returns only available items
+===================================================== */
+router.get("/", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM menu WHERE is_available = 1"
+    );
     res.json(rows);
-  });
-});
-
-/* GET MENU (ADMIN) */
-router.get("/admin/all", (req, res) => {
-  const sql = "SELECT * FROM menu";
-  db.query(sql, (err, rows) => {
-    if (err) return res.status(500).json(err);
-    res.json(rows);
-  });
-});
-
-/* ADD MENU ITEM */
-router.post("/", upload.single("image"), (req, res) => {
-  const { name, price, category } = req.body;
-
-  if (!name || !price || !category) {
-    return res.status(400).json({ message: "Missing fields" });
+  } catch (err) {
+    console.error("GET MENU ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
-
-  // Image is optional (static images used)
-  const imageUrl = req.body.image_url || null;
-
-  const sql = `
-    INSERT INTO menu (name, price, category, image_url, is_available)
-    VALUES (?, ?, ?, ?, 1)
-  `;
-
-  db.query(sql, [name, price, category, imageUrl], (err) => {
-    if (err) return res.status(500).json(err);
-    res.json({ message: "Menu item added" });
-  });
 });
 
-/* UPDATE MENU ITEM */
-router.put("/:id", (req, res) => {
-  const { id } = req.params;
-  const { name, price, category, image_url, is_available } = req.body;
+/* =====================================================
+   GET MENU ITEMS (ADMIN SIDE)
+   - Returns all items (available + unavailable)
+===================================================== */
+router.get("/admin/all", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM menu");
+    res.json(rows);
+  } catch (err) {
+    console.error("GET ADMIN MENU ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
-  const sql = `
-    UPDATE menu
-    SET name = ?, price = ?, category = ?, image_url = ?, is_available = ?
-    WHERE id = ?
-  `;
+/* =====================================================
+   ADD MENU ITEM
+   - Image is REQUIRED
+===================================================== */
+router.post("/", upload.single("image"), async (req, res) => {
+  try {
+    const { name, price, category } = req.body;
 
-  db.query(
-    sql,
-    [name, price, category, image_url, is_available ?? 1, id],
-    (err) => {
-      if (err) return res.status(500).json(err);
-      res.json({ message: "Menu item updated" });
+    // Validate text fields
+    if (!name || !price || !category) {
+      return res.status(400).json({ message: "Missing fields" });
     }
-  );
+
+    // Validate image upload
+    if (!req.file) {
+      return res.status(400).json({ message: "Image is required" });
+    }
+
+    // Build image URL from uploaded file
+    const imageUrl = "/uploads/" + req.file.filename;
+
+    // Insert menu item into database
+    await db.query(
+      `INSERT INTO menu (name, price, category, image_url, is_available)
+       VALUES (?, ?, ?, ?, 1)`,
+      [name, price, category, imageUrl]
+    );
+
+    res.json({ message: "Menu item added successfully" });
+
+  } catch (err) {
+    console.error("ADD MENU ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
-/* DELETE MENU ITEM */
-router.delete("/:id", (req, res) => {
-  const sql = "DELETE FROM menu WHERE id = ?";
-  db.query(sql, [req.params.id], (err) => {
-    if (err) return res.status(500).json(err);
-    res.json({ message: "Menu item deleted" });
-  });
+/* =====================================================
+   UPDATE MENU ITEM
+   - Image is OPTIONAL
+   - Keeps old image if no new image is uploaded
+===================================================== */
+router.put("/:id", upload.single("image"), async (req, res) => {
+  try {
+    const { name, price, category } = req.body;
+    const menuId = req.params.id;
+
+    // 1️⃣ Get current image from database
+    const [rows] = await db.query(
+      "SELECT image_url FROM menu WHERE id = ?",
+      [menuId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Menu item not found" });
+    }
+
+    // Start with existing image
+    let finalImageUrl = rows[0].image_url;
+
+    // 2️⃣ If a new image is uploaded → replace it
+    if (req.file) {
+      finalImageUrl = "/uploads/" + req.file.filename;
+    }
+
+    // 3️⃣ Update menu item safely
+    await db.query(
+      `UPDATE menu
+       SET name = ?, price = ?, category = ?, image_url = ?
+       WHERE id = ?`,
+      [name, price, category, finalImageUrl, menuId]
+    );
+
+    res.json({ message: "Menu item updated successfully" });
+
+  } catch (err) {
+    console.error("UPDATE MENU ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* =====================================================
+   DELETE MENU ITEM
+===================================================== */
+router.delete("/:id", async (req, res) => {
+  try {
+    await db.query("DELETE FROM menu WHERE id = ?", [req.params.id]);
+    res.json({ message: "Menu item deleted successfully" });
+  } catch (err) {
+    console.error("DELETE MENU ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 export default router;

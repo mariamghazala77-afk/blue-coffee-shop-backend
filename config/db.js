@@ -1,19 +1,17 @@
-import mysql from "mysql";
+import mysql from "mysql2/promise";
+import dotenv from "dotenv";
 
-const db = mysql.createConnection({
+dotenv.config();
+
+const db = mysql.createPool({
   host: process.env.MYSQLHOST,
+  port: Number(process.env.MYSQLPORT),
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT,
-});
-
-db.connect((err) => {
-  if (err) {
-    console.error("❌ MySQL connection error:", err.message);
-  } else {
-    console.log("✅ MySQL connected");
-  }
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
 
 export default db;

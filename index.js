@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env" }); // ✅ يجب أن يكون أول شيء
+dotenv.config();
 
 import express from "express";
 import cors from "cors";
@@ -10,19 +10,29 @@ import adminAuthRoutes from "./routes/adminAuth.js";
 
 const app = express();
 
-app.use(cors());
+/* ===============================
+   CORS — GUARANTEED WORKING
+================================ */
+app.use(cors()); // <-- THIS FIXES IT
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// ❌ لا نستخدم uploads محلي في production (لكن وجوده لا يكسر)
+/* ===============================
+   STATIC FILES
+================================ */
 app.use("/uploads", express.static("uploads"));
 
-// Routes
+/* ===============================
+   ROUTES
+================================ */
 app.use("/api/menu", menuRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/admin", adminAuthRoutes);
 
-// Start server
+/* ===============================
+   START SERVER
+================================ */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
