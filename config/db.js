@@ -3,12 +3,16 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// MySQL connection pool (works locally + on Railway)
 const db = mysql.createPool({
   host: process.env.MYSQLHOST,
   port: Number(process.env.MYSQLPORT),
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
+
+  // Explicit database selection (prevents "No database selected" error)
   database: process.env.MYSQLDATABASE,
+
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
