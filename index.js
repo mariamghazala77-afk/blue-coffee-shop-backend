@@ -24,8 +24,9 @@ const app = express();
 
 /* ===============================
    CORS CONFIG (LOCAL + NETLIFY)
-   This FIXES the CORS error you saw
-   and does NOT break localhost
+   ✔ Works on localhost
+   ✔ Works on Netlify
+   ✔ Does NOT crash on Node 22
 ================================ */
 
 // Allowed frontend origins
@@ -43,18 +44,16 @@ app.use(
       // Allow only our frontend origins
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
-      } else {
-        return callback(new Error("CORS not allowed"));
       }
+
+      // Block everything else
+      return callback(new Error("Not allowed by CORS"));
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
-
-// Handle preflight requests (VERY IMPORTANT for production)
-app.options("/*", cors());
 
 /* ===============================
    BODY PARSING
@@ -64,7 +63,6 @@ app.use(express.urlencoded({ extended: true }));
 
 /* ===============================
    STATIC FILES
-   (Local uploads still work)
 ================================ */
 app.use("/uploads", express.static("uploads"));
 
