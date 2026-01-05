@@ -54,7 +54,7 @@ app.use(
 );
 
 // Handle preflight requests (VERY IMPORTANT for production)
-app.options("*", cors());
+app.options("/*", cors());
 
 /* ===============================
    BODY PARSING
