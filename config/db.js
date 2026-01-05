@@ -12,7 +12,9 @@ const db = mysql.createPool({
   password: process.env.MYSQLPASSWORD,
 
   // Explicit database selection (prevents "No database selected" error)
-  database: process.env.MYSQLDATABASE,
+  database:  process.env.MYSQLDATABASE ||
+    process.env.MYSQL_DATABASE ||
+    "railway",
 
   waitForConnections: true,
   connectionLimit: 10,
