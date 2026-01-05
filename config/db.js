@@ -2,6 +2,7 @@ import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 
 dotenv.config();
+console.log("MYSQLDATABASE =", process.env.MYSQLDATABASE);
 
 // MySQL connection pool (works locally + on Railway)
 const db = mysql.createPool({
